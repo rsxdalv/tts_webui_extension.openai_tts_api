@@ -10,11 +10,6 @@ from .tts_service import (
 from .voice_service import (
     get_voices_by_model,
     get_available_models,
-    get_kokoro_voices,
-    get_chatterbox_voices,
-    get_styletts2_voices,
-    get_f5_tts_voices,
-    get_global_preset_voices,
 )
 from .transcription_service import transcribe_audio
 
@@ -25,10 +20,5 @@ __all__ = [
     "convert_audio_format",
     "get_voices_by_model",
     "get_available_models",
-    "get_kokoro_voices",
-    "get_chatterbox_voices", 
-    "get_styletts2_voices",
-    "get_f5_tts_voices",
-    "get_global_preset_voices",
     "transcribe_audio",
 ]

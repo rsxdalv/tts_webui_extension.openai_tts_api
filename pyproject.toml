@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tts_webui_extension.openai_tts_api"
-version = "0.16.1"
+version = "1.0.1"
 description = "OpenAI compatible TTS API with support for multiple TTS models"
 readme = "README.md"
 license = { text = "MIT" }
@@ -49,3 +49,14 @@ Homepage = "https://github.com/rsxdalv/tts_webui_extension.openai_tts_api"
 [tool.setuptools.packages.find]
 # This will find all namespace packages automatically
 namespaces = true
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]  # pycodestyle (E,F,W) + isort (I)
+ignore = ["E501", "F401", "E402"]
+
+[tool.ruff.format]
+quote-style = "double"  # Match black's default

@@ -158,12 +158,12 @@ def extra_functions_ui():
     )
 
     def test_api_with_open_ai(params):
-        from .services.tts_service import preset_adapter
+        from .services.tts_service import _preset_adapter
         from .models.create_speech_request import CreateSpeechRequest
 
         request = CreateSpeechRequest(**params)
         text = request.input
-        result = preset_adapter(request, text)
+        result = _preset_adapter(request, text)
         return result["audio_out"]
 
     gr.Button("Test Voice").click(
