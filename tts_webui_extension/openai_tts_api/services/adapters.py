@@ -30,8 +30,10 @@ def _chatterbox_adapter(model: str, text: str, voice: str | None, speed: float |
     from tts_webui_extension.chatterbox.api import tts
 
     audio_prompt_path = None if voice == "random" else voice
-    return tts(text, audio_prompt_path=audio_prompt_path, chunked=True, **params)
 
+    if "chunked" not in params:
+        params["chunked"] = True
+    return tts(text, audio_prompt_path=audio_prompt_path, **params)
 
 register_tts_adapter("chatterbox", _chatterbox_adapter)
 

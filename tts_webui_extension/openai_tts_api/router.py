@@ -9,7 +9,7 @@ from typing import Optional
 from tts_webui.config.config_utils import get_config_value
 
 # Import route modules
-from .api import audio, models, info
+from .api import audio, models, info, proxy
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,7 @@ async def _auth_middleware_entry(request: Request, call_next):
 app.include_router(audio.router)
 app.include_router(models.router)
 app.include_router(info.router)
+app.include_router(proxy.router)
 
 
 # OpenAI-compatible error response model
