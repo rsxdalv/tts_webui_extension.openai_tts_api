@@ -66,6 +66,7 @@ def register(
     response.raise_for_status()
     result = response.json()
     logger.info("Registered '%s' -> %s: %s", model, url, result)
+    print(f"Registered '{model}' -> {url}: {result}")
     return result
 
 

@@ -3,10 +3,10 @@ import gradio as gr
 
 from tts_webui.config.config_utils import get_config_value, set_config_value
 
-from .migrate_config import migrate_config
 from .extension_metadata import get_metadata
 from .inspection_ui import render_inspection_ui
 from .api_caller_ui import render_api_caller_ui
+from .extra_functions_ui import extra_functions_ui
 
 
 # from .threader import (
@@ -14,6 +14,8 @@ from .api_caller_ui import render_api_caller_ui
 #     deactivate_api,
 #     get_api_status,
 # )
+
+_server_started = False
 
 
 def activate_api(host=None, port=None):
@@ -141,39 +143,6 @@ def presets_ui():
                 outputs=[presets_json],
                 api_name="open_ai_api_load_presets",
             )
-
-
-def extra_functions_ui():
-    def get_chatterbox_voices():
-        import os
-
-        voices = []
-        for file in os.listdir("voices/chatterbox"):
-            if file.endswith(".wav"):
-                voices.append(file)
-        return voices
-
-    gr.Button("Get Chatterbox Voices").click(
-        fn=get_chatterbox_voices,
-        outputs=[gr.JSON()],
-        api_name="get_chatterbox_voices",
-    )
-
-    def test_api_with_open_ai(params):
-        from .services.tts_service import _preset_adapter
-        from .models.create_speech_request import CreateSpeechRequest
-
-        request = CreateSpeechRequest(**params)
-        text = request.input
-        result = _preset_adapter(request, text)
-        return result["audio_out"]
-
-    gr.Button("Test Voice").click(
-        fn=test_api_with_open_ai,
-        inputs=[gr.JSON()],
-        outputs=[gr.Audio()],
-        api_name="open_ai_api_test_voice_preset",
-    )
 
 
 def ui():
@@ -351,10 +320,12 @@ def startup_ui():
                 )
 
 
-def extension__tts_generation_webui():
-    """Extension entry point."""
-    migrate_config()
-    ui()
+def start_server__tts_generation_webui():
+    """Start the API server. Idempotent — safe to call multiple times."""
+    global _server_started
+    if _server_started:
+        return
+    _server_started = True
 
     ENV_AUTO_ACTIVATE_OPENAI_API = os.environ.get("AUTO_ACTIVATE_OPENAI_API", "0")
     config_auto_activate_openai_api = get_config_value(
@@ -363,6 +334,12 @@ def extension__tts_generation_webui():
 
     if ENV_AUTO_ACTIVATE_OPENAI_API == "1" or config_auto_activate_openai_api:
         activate_api()
+
+
+def extension__tts_generation_webui():
+    """Extension entry point."""
+    start_server__tts_generation_webui()
+    ui()
 
     return get_metadata()
 

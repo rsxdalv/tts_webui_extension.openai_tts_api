@@ -3,6 +3,41 @@
 import gradio as gr
 
 
+def _format_adapters(adapters: list[dict]) -> str:
+    if not adapters:
+        return "No adapters registered."
+    lines = ["| Model | Type | Blocking | Streaming | URL | Auth |", "|---|---|---|---|---|---|"]
+    for a in adapters:
+        model = a.get("model", "")
+        adapter_type = a.get("type", "")
+        blocking = "✓" if a.get("blocking") else ""
+        streaming = "✓" if a.get("streaming") else ""
+        url = a.get("url", "")
+        auth = "✓" if a.get("auth") else ""
+        lines.append(f"| {model} | {adapter_type} | {blocking} | {streaming} | {url} | {auth} |")
+    return "\n".join(lines)
+
+
+def _format_voice_getters(voice_getters: list[str]) -> str:
+    if not voice_getters:
+        return "No voice getters registered."
+    lines = ["| Voice Getter Model |", "|---|"]
+    for v in voice_getters:
+        lines.append(f"| {v} |")
+    return "\n".join(lines)
+
+
+def _format_voices(voices: list[dict]) -> str:
+    if not voices:
+        return "No voices found."
+    if any(v.get("error") for v in voices):
+        return f"Error: {voices[0]['error']}"
+    lines = ["| Voice ID | Name | Language | Gender |", "|---|---|---|---|"]
+    for v in voices:
+        lines.append(f"| {v.get('voice_id', '')} | {v.get('name', '')} | {v.get('language', '')} | {v.get('gender', '')} |")
+    return "\n".join(lines)
+
+
 def _get_backend_state() -> dict:
     from .services.tts_adapter_registry import _TTS_ADAPTERS, _TTS_STREAMING_ADAPTERS
     from .services.voice_service import _VOICE_GETTERS
@@ -36,14 +71,15 @@ def _get_backend_state() -> dict:
     }
 
 
-def _get_voices_for_model(model: str) -> list[dict]:
+def _get_voices_for_model(model: str) -> tuple[list[dict], str]:
     if not model:
-        return []
+        return [], ""
     from .services.voice_service import get_voices_by_model
     try:
-        return get_voices_by_model(model)
+        voices = get_voices_by_model(model)
+        return voices, _format_voices(voices)
     except Exception as e:
-        return [{"error": str(e)}]
+        return [{"error": str(e)}], f"Error: {str(e)}"
 
 
 def render_inspection_ui():
@@ -59,10 +95,12 @@ def render_inspection_ui():
         with gr.Column():
             gr.Markdown("### Registered Adapters")
             adapters_json = gr.JSON(label="Adapters", value=lambda: _get_backend_state()["adapters"])
+            adapters_md = gr.Markdown(label="Adapters (formatted)")
 
         with gr.Column():
             gr.Markdown("### Voice Getters")
             voice_getters_json = gr.JSON(label="Voice getter models", value=lambda: _get_backend_state()["voice_getters"])
+            voice_getters_md = gr.Markdown(label="Voice getter models (formatted)")
 
     with gr.Row():
         with gr.Column():
@@ -73,17 +111,23 @@ def render_inspection_ui():
             )
             check_voices_btn = gr.Button("Check Voices", variant="secondary")
             voices_json = gr.JSON(label="Voices")
+            voices_md = gr.Markdown(label="Voices (formatted)")
             check_voices_btn.click(
                 fn=_get_voices_for_model,
                 inputs=[model_input],
-                outputs=[voices_json],
+                outputs=[voices_json, voices_md],
             )
 
     def _refresh():
         state = _get_backend_state()
-        return state["adapters"], state["voice_getters"]
+        adapters = state["adapters"]
+        voice_getters = state["voice_getters"]
+        return (
+            adapters, _format_adapters(adapters),
+            voice_getters, _format_voice_getters(voice_getters),
+        )
 
     refresh_btn.click(
         fn=_refresh,
-        outputs=[adapters_json, voice_getters_json],
+        outputs=[adapters_json, adapters_md, voice_getters_json, voice_getters_md],
     )
