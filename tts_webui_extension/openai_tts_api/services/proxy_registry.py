@@ -81,7 +81,7 @@ def _make_proxy_tts_adapter(reg: "ProxyRegistration"):
         payload = {
             "model": model,
             "input": text,
-            "voice": voice or "default",
+            "voice": voice,
             "speed": speed if speed is not None else 1.0,
             "response_format": "wav",
             "stream": False,
@@ -113,7 +113,7 @@ def _make_proxy_streaming_adapter(reg: "ProxyRegistration"):
         payload = {
             "model": model,
             "input": text,
-            "voice": voice or "default",
+            "voice": voice,
             "speed": speed if speed is not None else 1.0,
             "response_format": "wav",
             "stream": True,

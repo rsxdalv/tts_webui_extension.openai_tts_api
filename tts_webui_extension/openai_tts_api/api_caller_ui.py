@@ -1,8 +1,11 @@
 """api_caller_ui.py — Gradio tab for calling the TTS API interactively."""
 
 import json
+import logging
 
 import gradio as gr
+
+logger = logging.getLogger(__name__)
 
 
 def _call(model, text, voice, speed, response_format, extra_json):
@@ -14,18 +17,31 @@ def _call(model, text, voice, speed, response_format, extra_json):
     except json.JSONDecodeError as e:
         raise gr.Error(f"Extra parameters JSON is invalid: {e}")
 
+    # Normalise empty string from Gradio to None
+    voice_value = voice.strip() if voice else None
+    if not voice_value or voice_value.lower() == "none":
+        voice_value = None
+
+    logger.info(
+        "[api_caller_ui] model=%s voice=%r speed=%s format=%s extra=%s",
+        model, voice_value, speed, response_format, extra,
+    )
+
     request = CreateSpeechRequest(
         model=model,
         input=text,
-        voice=voice or None,
+        voice=voice_value,
         speed=speed,
         response_format=response_format,
         params=extra if extra else None,
     )
 
+    logger.info("[api_caller_ui] resolved request.voice=%r", request.voice)
+
     try:
         wav_bytes = generate_speech(request)
     except Exception as e:
+        logger.exception("[api_caller_ui] generate_speech failed")
         raise gr.Error(str(e))
 
     import io

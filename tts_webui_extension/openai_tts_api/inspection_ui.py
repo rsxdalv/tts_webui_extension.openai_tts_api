@@ -46,12 +46,6 @@ def _get_voices_for_model(model: str) -> list[dict]:
         return [{"error": str(e)}]
 
 
-def _all_known_models() -> list[str]:
-    from .services.tts_adapter_registry import _TTS_ADAPTERS, _TTS_STREAMING_ADAPTERS
-    from .services.proxy_registry import _PROXY_REGISTRATIONS
-    return sorted(set(_TTS_ADAPTERS) | set(_TTS_STREAMING_ADAPTERS) | set(_PROXY_REGISTRATIONS))
-
-
 def render_inspection_ui():
     gr.Markdown("## Backend Inspection")
     gr.Markdown(
@@ -73,24 +67,23 @@ def render_inspection_ui():
     with gr.Row():
         with gr.Column():
             gr.Markdown("### Voices per Model")
-            model_dropdown = gr.Dropdown(
+            model_input = gr.Textbox(
                 label="Model",
-                choices=_all_known_models(),
-                interactive=True,
-                allow_custom_value=True,
+                placeholder="Type a model name and click Check Voices",
             )
+            check_voices_btn = gr.Button("Check Voices", variant="secondary")
             voices_json = gr.JSON(label="Voices")
-            model_dropdown.change(
+            check_voices_btn.click(
                 fn=_get_voices_for_model,
-                inputs=[model_dropdown],
+                inputs=[model_input],
                 outputs=[voices_json],
             )
 
     def _refresh():
         state = _get_backend_state()
-        return state["adapters"], state["voice_getters"], _all_known_models()
+        return state["adapters"], state["voice_getters"]
 
     refresh_btn.click(
         fn=_refresh,
-        outputs=[adapters_json, voice_getters_json, model_dropdown],
+        outputs=[adapters_json, voice_getters_json],
     )
