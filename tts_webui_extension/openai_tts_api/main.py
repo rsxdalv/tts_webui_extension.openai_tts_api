@@ -5,6 +5,8 @@ from tts_webui.config.config_utils import get_config_value, set_config_value
 
 from .migrate_config import migrate_config
 from .extension_metadata import get_metadata
+from .inspection_ui import render_inspection_ui
+from .api_caller_ui import render_api_caller_ui
 
 
 # from .threader import (
@@ -181,6 +183,10 @@ def ui():
             startup_ui()
         with gr.Tab("Presets"):
             presets_ui()
+        with gr.Tab("API Caller"):
+            render_api_caller_ui()
+        with gr.Tab("Backend Inspection"):
+            render_inspection_ui()
         with gr.Tab("Extra Functions (Backend)"):
             extra_functions_ui()
 
