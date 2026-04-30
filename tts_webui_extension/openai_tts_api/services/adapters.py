@@ -122,11 +122,6 @@ def _megatts3_adapter(model: str, text: str, voice: str | None, speed: float | N
 register_tts_adapter("megatts3", _megatts3_adapter)
 
 
-from tts_webui_extension.fireredtts2.openai_api_adapter import register as _register_fireredtts2
-
-_register_fireredtts2()
-
-
 def _higgs_v2_adapter(model: str, text: str, voice: str | None, speed: float | None, params: dict) -> dict:
     from tts_webui_extension.higgs_v2.api import tts
 

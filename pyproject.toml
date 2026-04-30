@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tts_webui_extension.openai_tts_api"
-version = "1.2.0"
+version = "1.2.1"
 description = "OpenAI compatible TTS API with support for multiple TTS models"
 readme = "README.md"
 license = { text = "MIT" }
