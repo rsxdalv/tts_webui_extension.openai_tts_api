@@ -122,21 +122,9 @@ def _megatts3_adapter(model: str, text: str, voice: str | None, speed: float | N
 register_tts_adapter("megatts3", _megatts3_adapter)
 
 
-def _fireredtts2_adapter(model: str, text: str, voice: str | None, speed: float | None, params: dict) -> dict:
-    from tts_webui_extension.fireredtts2.api import tts
+from tts_webui_extension.fireredtts2.openai_api_adapter import register as _register_fireredtts2
 
-    return tts(
-        text=text,
-        temperature=params.get("temperature", 0.9),
-        topk=params.get("topk", 30),
-        prompt_wav=params.get("prompt_wav"),
-        prompt_text=params.get("prompt_text"),
-        model_name=params.get("model_name", "monologue"),
-        device=params.get("device", "cuda"),
-    )
-
-
-register_tts_adapter("fireredtts2", _fireredtts2_adapter)
+_register_fireredtts2()
 
 
 def _higgs_v2_adapter(model: str, text: str, voice: str | None, speed: float | None, params: dict) -> dict:
