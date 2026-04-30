@@ -1,6 +1,5 @@
 """api_caller_ui.py — Gradio tab for calling the live HTTP API."""
 
-import io
 import json
 import logging
 import os
@@ -57,7 +56,7 @@ def _call(host, port, api_key, model, text, voice, speed, response_format, extra
         raise gr.Error(str(e))
 
     logger.info("[api_caller_ui] response %s bytes", len(response.content))
-    return io.BytesIO(response.content)
+    return response.content
 
 
 def render_api_caller_ui():
