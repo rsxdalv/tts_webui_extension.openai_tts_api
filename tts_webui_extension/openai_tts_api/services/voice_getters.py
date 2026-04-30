@@ -127,13 +127,6 @@ def _get_megatts3_voices() -> list[dict]:
 register_voice_getter("megatts3", _get_megatts3_voices)
 
 
-def _get_fireredtts2_voices() -> list[dict]:
-    return []
-
-
-register_voice_getter("fireredtts2", _get_fireredtts2_voices)
-
-
 def _get_higgs_v2_voices() -> list[dict]:
     return []
 

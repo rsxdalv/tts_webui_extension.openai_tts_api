@@ -75,7 +75,7 @@ def render_inspection_ui():
             gr.Markdown("### Voices per Model")
             model_dropdown = gr.Dropdown(
                 label="Model",
-                choices=_all_known_models,
+                choices=_all_known_models(),
                 interactive=True,
             )
             voices_json = gr.JSON(label="Voices")
