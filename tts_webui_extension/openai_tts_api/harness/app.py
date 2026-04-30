@@ -120,6 +120,10 @@ def create_app(
             if isinstance(result, dict):
                 from .helpers import result_to_wav
                 result = result_to_wav(result)
+            # Detect if (SAMPLE_RATE, audio_numpy) format is returned and convert to WAV if so
+            elif isinstance(result, tuple) and len(result) == 2 and isinstance(result[0], int):
+                from .helpers import result_to_wav
+                result = result_to_wav({"audio_out": result})
             return Response(content=result, media_type="audio/wav")
         except Exception as exc:
             logger.exception("tts_fn raised an error")

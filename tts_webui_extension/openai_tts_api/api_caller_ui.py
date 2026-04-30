@@ -1,62 +1,92 @@
-"""api_caller_ui.py — Gradio tab for calling the TTS API interactively."""
+"""api_caller_ui.py — Gradio tab for calling the live HTTP API."""
 
+import io
 import json
 import logging
+import os
 
 import gradio as gr
 
 logger = logging.getLogger(__name__)
 
 
-def _call(model, text, voice, speed, response_format, extra_json):
-    from .services.tts_service import generate_speech
-    from .models.create_speech_request import CreateSpeechRequest
+def _call(host, port, api_key, model, text, voice, speed, response_format, extra_json):
+    import requests
+    from tts_webui.config.config_utils import get_config_value
 
     try:
         extra = json.loads(extra_json) if extra_json and extra_json.strip() else {}
     except json.JSONDecodeError as e:
         raise gr.Error(f"Extra parameters JSON is invalid: {e}")
 
-    # Normalise empty string from Gradio to None
     voice_value = voice.strip() if voice else None
     if not voice_value or voice_value.lower() == "none":
         voice_value = None
 
-    logger.info(
-        "[api_caller_ui] model=%s voice=%r speed=%s format=%s extra=%s",
-        model, voice_value, speed, response_format, extra,
-    )
+    host_val = host.strip() or "localhost"
+    if host_val == "0.0.0.0":
+        host_val = "localhost"
+    port_val = int(port) if port else get_config_value("extension_openai_tts_api", "port", 7778)
 
-    request = CreateSpeechRequest(
-        model=model,
-        input=text,
-        voice=voice_value,
-        speed=speed,
-        response_format=response_format,
-        params=extra if extra else None,
-    )
+    url = f"http://{host_val}:{port_val}/v1/audio/speech"
 
-    logger.info("[api_caller_ui] resolved request.voice=%r", request.voice)
+    key = (api_key or "").strip() or os.environ.get("OPENAI_API_KEY") or get_config_value("extension_openai_tts_api", "api_key", None)
+    headers = {"Authorization": f"Bearer {key}"} if key else {}
+
+    payload = {
+        "model": model,
+        "input": text,
+        "voice": voice_value,
+        "speed": speed,
+        "response_format": response_format,
+        "params": extra if extra else None,
+    }
+
+    logger.info("[api_caller_ui] POST %s  model=%s voice=%r speed=%s", url, model, voice_value, speed)
 
     try:
-        wav_bytes = generate_speech(request)
+        response = requests.post(url, json=payload, headers=headers, timeout=120)
+        response.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        raise gr.Error(f"Could not connect to {url} — is the API server running?")
+    except requests.exceptions.HTTPError as e:
+        logger.error("[api_caller_ui] HTTP %s: %s", response.status_code, response.text)
+        raise gr.Error(f"HTTP {response.status_code}: {response.text}")
     except Exception as e:
-        logger.exception("[api_caller_ui] generate_speech failed")
+        logger.exception("[api_caller_ui] request failed")
         raise gr.Error(str(e))
 
-    import io
-    return io.BytesIO(wav_bytes)
+    logger.info("[api_caller_ui] response %s bytes", len(response.content))
+    return io.BytesIO(response.content)
 
 
 def render_api_caller_ui():
+    from tts_webui.config.config_utils import get_config_value
+
     gr.Markdown("## API Caller")
-    gr.Markdown(
-        "Call the TTS backend directly. Bypasses the HTTP server — works even if the API is not started."
-    )
+    gr.Markdown("Send a request to the running HTTP API server.")
+
+    with gr.Row():
+        host = gr.Textbox(
+            label="Host",
+            value=lambda: get_config_value("extension_openai_tts_api", "host", "0.0.0.0"),
+            scale=2,
+        )
+        port = gr.Number(
+            label="Port",
+            value=lambda: get_config_value("extension_openai_tts_api", "port", 7778),
+            scale=1,
+        )
+        api_key = gr.Textbox(
+            label="API Key (optional)",
+            type="password",
+            placeholder="Leave blank to use saved key or OPENAI_API_KEY env var",
+            scale=2,
+        )
 
     with gr.Row():
         with gr.Column(scale=2):
-            gr.Markdown("### Standard Parameters")
+            gr.Markdown("### Request")
             model = gr.Textbox(
                 label="Model",
                 placeholder="e.g. hexgrad/Kokoro-82M, chatterbox, piper-tts …",
@@ -83,7 +113,6 @@ def render_api_caller_ui():
                 choices=["wav", "mp3", "opus", "aac", "flac", "pcm"],
                 value="wav",
             )
-
             gr.Markdown("### Extra Parameters (JSON)")
             extra_json = gr.Code(
                 label="params (JSON object)",
@@ -91,7 +120,6 @@ def render_api_caller_ui():
                 value="{}",
                 lines=6,
             )
-
             generate_btn = gr.Button("Generate", variant="primary")
 
         with gr.Column(scale=1):
@@ -100,7 +128,7 @@ def render_api_caller_ui():
 
     generate_btn.click(
         fn=_call,
-        inputs=[model, text, voice, speed, response_format, extra_json],
+        inputs=[host, port, api_key, model, text, voice, speed, response_format, extra_json],
         outputs=[audio_out],
         api_name="api_caller_generate",
     )
