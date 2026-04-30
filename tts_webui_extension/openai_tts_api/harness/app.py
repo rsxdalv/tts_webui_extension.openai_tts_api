@@ -31,11 +31,17 @@ logger = logging.getLogger(__name__)
 class SpeechRequest(BaseModel):
     model: str = Field(default="tts-1")
     input: str
-    voice: str = Field(default="default")
+    voice: Optional[str] = Field(default=None)
     speed: float = Field(default=1.0, ge=0.25, le=4.0)
     response_format: str = Field(default="wav")
     params: Optional[dict] = None
     stream: bool = Field(default=False)
+
+    @property
+    def resolved_voice(self) -> Optional[str]:
+        if not self.voice or self.voice.strip().lower() == "none":
+            return None
+        return self.voice
 
 
 def create_app(
@@ -110,7 +116,7 @@ def create_app(
     @app.post("/v1/audio/speech")
     async def speech(req: SpeechRequest):
         try:
-            result = tts_fn(req.model, req.input, req.voice, req.speed, req.params or {})
+            result = tts_fn(req.model, req.input, req.resolved_voice, req.speed, req.params or {})
             if isinstance(result, dict):
                 from .helpers import result_to_wav
                 result = result_to_wav(result)

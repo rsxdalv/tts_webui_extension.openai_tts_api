@@ -77,6 +77,7 @@ def render_inspection_ui():
                 label="Model",
                 choices=_all_known_models(),
                 interactive=True,
+                allow_custom_value=True,
             )
             voices_json = gr.JSON(label="Voices")
             model_dropdown.change(

@@ -27,7 +27,7 @@ class CreateSpeechRequest(BaseModel):
     input: str = Field(
         ..., description="The text to generate audio for", max_length=4096
     )
-    voice: str = Field(..., description="The voice to use when generating the audio")
+    voice: Optional[str] = Field(default=None, description="The voice to use when generating the audio")
     response_format: ResponseFormatEnum = Field(
         default=ResponseFormatEnum.WAV, description="The format to audio in"
     )
@@ -45,6 +45,14 @@ class CreateSpeechRequest(BaseModel):
     stream: bool = Field(
         default=True, description="Whether to stream the audio response"
     )
+
+    @validator("voice", pre=True, always=True)
+    def _normalise_voice(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, str) and v.strip().lower() == "none":
+            return None
+        return v
 
     @validator("instructions")
     def validate_instructions(cls, v, values):
