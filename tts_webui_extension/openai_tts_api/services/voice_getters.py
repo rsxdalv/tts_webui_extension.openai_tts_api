@@ -99,32 +99,11 @@ def _get_styletts2_voices() -> list[dict]:
 register_voice_getter("styletts2", _get_styletts2_voices)
 
 
-def _get_piper_tts_voices() -> list[dict]:
-    return []
-
-
-register_voice_getter("piper-tts", _get_piper_tts_voices)
-
-
 def _get_vall_e_x_voices() -> list[dict]:
     return []
 
 
 register_voice_getter("vall-e-x", _get_vall_e_x_voices)
-
-
-def _get_parler_tts_voices() -> list[dict]:
-    return []
-
-
-register_voice_getter("parler-tts", _get_parler_tts_voices)
-
-
-def _get_megatts3_voices() -> list[dict]:
-    return []
-
-
-register_voice_getter("megatts3", _get_megatts3_voices)
 
 
 def _get_higgs_v2_voices() -> list[dict]:
@@ -133,22 +112,3 @@ def _get_higgs_v2_voices() -> list[dict]:
 
 register_voice_getter("higgs_v2", _get_higgs_v2_voices)
 
-
-def _get_mms_voices() -> list[dict]:
-    return []
-
-
-register_voice_getter("mms", _get_mms_voices)
-
-
-def _get_maha_tts_voices() -> list[dict]:
-    try:
-        from tts_webui_extension.maha_tts.api import get_voices
-
-        return get_voices()
-    except ImportError:
-        logger.warning("Maha TTS extension not available")
-        return []
-
-
-register_voice_getter("maha_tts", _get_maha_tts_voices)
