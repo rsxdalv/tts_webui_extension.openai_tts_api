@@ -57,17 +57,21 @@ def register(
         headers["Authorization"] = f"Bearer {main_api_key}"
 
     payload = {"model": model, "url": url, "api_key": api_key}
-    response = requests.post(
-        f"{host}/tts_webui/proxy/register",
-        json=payload,
-        headers=headers,
-        timeout=10,
-    )
-    response.raise_for_status()
-    result = response.json()
-    logger.info("Registered '%s' -> %s: %s", model, url, result)
-    print(f"Registered '{model}' -> {url}: {result}")
-    return result
+    try:
+        response = requests.post(
+            f"{host}/tts_webui/proxy/register",
+            json=payload,
+            headers=headers,
+            timeout=10,
+        )
+        response.raise_for_status()
+        result = response.json()
+        logger.info("Registered '%s' -> %s: %s", model, url, result)
+        print(f"Registered '{model}' -> {url}: {result}")
+        return result
+    except requests.exceptions.RequestException as e:
+        logger.error("Failed to register '%s': %s", model, e)
+        raise
 
 
 def unregister(
