@@ -26,6 +26,10 @@ def result_to_wav(result: dict) -> bytes:
     from scipy.io import wavfile
 
     sample_rate, audio_data = result["audio_out"]
+    # Normalise layout: scipy expects (samples,) or (samples, channels).
+    # Some engines return (channels, samples) — detect by a plausible channel count.
+    if audio_data.ndim == 2 and audio_data.shape[0] <= 32:
+        audio_data = audio_data.T  # (channels, samples) -> (samples, channels)
     buf = io.BytesIO()
     if audio_data.dtype in (np.float32, np.float64):
         if abs(audio_data).max() > 1.0:
